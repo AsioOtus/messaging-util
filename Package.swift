@@ -15,5 +15,4 @@ let package = Package(
             name: "MessagingUtil"
         )
     ]
-
 )

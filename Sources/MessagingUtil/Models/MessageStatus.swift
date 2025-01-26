@@ -1,5 +1,5 @@
 public enum MessageStatus {
-    case unhandled
-    case handled
+    case unprocessed
+    case incomplete
     case completed
 }

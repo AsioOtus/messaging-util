@@ -1,12 +1,12 @@
 import SwiftUI
 
-struct MessageViewModifier <MC>: ViewModifier where MC: Equatable {
-    let message: Message<MC>?
+struct MessageViewModifier <MessageContent>: ViewModifier where MessageContent: Equatable {
+    let message: Message<MessageContent>?
 
-    @StateObject private var descendingMessage: Reference<Message<MC>?> = .init(nil)
+    @StateObject private var descendingMessage: Reference<Message<MessageContent>?> = .init(nil)
 
-    init (messageContent: MC?) {
-        self.message = messageContent.map { .init(id: .init(), status: .unhandled, content: $0) }
+    init (messageContent: MessageContent?) {
+        self.message = messageContent.map { .init(id: .init(), status: .unprocessed, content: $0) }
     }
 
     func body (content: Content) -> some View {
@@ -19,9 +19,9 @@ struct MessageViewModifier <MC>: ViewModifier where MC: Equatable {
 }
 
 public extension View {
-    func message <MC> (
-        _ content: MC?
-    ) -> some View where MC: Equatable {
-        modifier(MessageViewModifier<MC>(messageContent: content))
+    func message <MessageContent> (
+        _ content: MessageContent?
+    ) -> some View where MessageContent: Equatable {
+        modifier(MessageViewModifier<MessageContent>(messageContent: content))
     }
 }

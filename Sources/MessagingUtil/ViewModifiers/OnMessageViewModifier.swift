@@ -1,9 +1,11 @@
 import SwiftUI
 
-struct OnMessageViewModifier <MC: Equatable>: ViewModifier {
-    @EnvironmentObject private var messageReference: Reference<Message<MC>?>
+public typealias Handler<MessageContent> = (MessageEnvelope<MessageContent>) -> (ProcessingAction, MessageContent)
 
-    let handler: (MessageEnvelope<MC>) -> MessageStatus
+struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent: Equatable {
+    @EnvironmentObject private var messageReference: Reference<Message<MessageContent>?>
+
+    let handler: Handler<MessageContent>
 
     func body (content: Content) -> some View {
         content
@@ -13,96 +15,47 @@ struct OnMessageViewModifier <MC: Equatable>: ViewModifier {
                     message.status != .completed
                 else { return }
 
-                let status = handler(message.envelope(message.content))
-                messageReference.referencedValue = message.setStatus(status)
+                let (processingAction, messageContent) = handler(message.envelope(message.content))
+
+                messageReference.referencedValue = .init(
+                    id: message.id,
+                    status: processingAction.messageStatus,
+                    content: messageContent
+                )
             }
     }
 }
 
 public extension View {
-    func onMessage <MC: Equatable> (
-        of content: MC.Type = MC.self,
-        perform action: @escaping (MessageEnvelope<MC>) -> MessageStatus
-    ) -> some View {
+    func onMessage <MessageContent> (
+        of _: MessageContent.Type = MessageContent.self,
+        perform action: @escaping Handler<MessageContent>
+    ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MC>(handler: action)
+            OnMessageViewModifier<MessageContent>(handler: action)
         )
     }
 
-    func onMessage <MC: Equatable> (
-        of content: MC.Type = MC.self,
-        equalTo message: MC,
-        perform action: @escaping (MessageEnvelope<MC>) -> MessageStatus
-    ) -> some View {
+    func onMessage <MessageContent> (
+        of _: MessageContent.Type = MessageContent.self,
+        perform action: @escaping (MessageEnvelope<MessageContent>) -> ProcessingAction
+    ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MC> {
-                if $0.content == message {
-                    action($0)
-                } else {
-                    .unhandled
-                }
+            OnMessageViewModifier<MessageContent> {
+                let processingAction = action($0)
+                return (processingAction, $0.content)
             }
         )
     }
 
-    func onMessage <MC: Equatable> (
-        of content: MC.Type = MC.self,
-        where condition: @escaping (MC) -> Bool,
-        perform action: @escaping (MessageEnvelope<MC>) -> MessageStatus
-    ) -> some View {
+    func onMessage <MessageContent> (
+        of _: MessageContent.Type = MessageContent.self,
+        perform action: @escaping (MessageEnvelope<MessageContent>) -> Void
+    ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MC> {
-                if condition($0.content) {
-                    action($0)
-                } else {
-                    .unhandled
-                }
-            }
-        )
-    }
-
-    func onMessage <MC: Equatable> (
-        of content: MC.Type = MC.self,
-        perform action: @escaping (MessageEnvelope<MC>) -> Void
-    ) -> some View {
-        modifier(
-            OnMessageViewModifier<MC> {
+            OnMessageViewModifier<MessageContent> {
                 action($0)
-                return .completed
-            }
-        )
-    }
-
-    func onMessage <MC: Equatable> (
-        of content: MC.Type = MC.self,
-        equalTo message: MC,
-        perform action: @escaping (MessageEnvelope<MC>) -> Void
-    ) -> some View {
-        modifier(
-            OnMessageViewModifier<MC> {
-                if $0.content == message {
-                    action($0)
-                    return .completed
-                } else {
-                    return .unhandled
-                }
-            }
-        )
-    }
-
-    func onMessage <MC: Equatable> (
-        of content: MC.Type = MC.self,
-        where condition: @escaping (MC) -> Bool,
-        perform action: @escaping (MessageEnvelope<MC>) -> Void
-    ) -> some View {
-        modifier(
-            OnMessageViewModifier<MC> {
-                if condition($0.content) {
-                    action($0)
-                    return .completed
-                } else {
-                    return .unhandled
-                }
+                return (.complete, $0.content)
             }
         )
     }
