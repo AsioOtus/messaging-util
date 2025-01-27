@@ -1,7 +1,6 @@
 import Foundation
 
-public struct MessageEnvelope <Content> {
+public struct MessageInfo {
     public let id: UUID
     public let status: MessageStatus
-    public let content: Content
 }

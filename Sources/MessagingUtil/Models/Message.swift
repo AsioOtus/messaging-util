@@ -1,19 +1,14 @@
 import Foundation
 
-public struct Message <Content: Equatable>: Equatable {
+struct Message <Content: Equatable>: Equatable {
     let id: UUID
     let status: MessageStatus
     let content: Content
 
-    func setStatus (_ status: MessageStatus) -> Self {
+    var info: MessageInfo {
         .init(
             id: id,
-            status: status,
-            content: content
+            status: status
         )
-    }
-
-    func envelope (_ content: Content) -> MessageEnvelope<Content> {
-        .init(id: id, status: status, content: content)
     }
 }
