@@ -67,7 +67,7 @@ public extension View {
         modifier(
             OnMessageViewModifier<MessageContent> {
                 action($0, $1)
-                return (.complete, $0)
+                return (.continue, $0)
             }
         )
     }
@@ -102,7 +102,7 @@ public extension View {
         modifier(
             OnMessageViewModifier<MessageContent> { messageContent, _ in
                 action(messageContent)
-                return (.complete, nil)
+                return (.continue, nil)
             }
         )
     }
