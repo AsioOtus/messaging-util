@@ -2,10 +2,6 @@ import Foundation
 
 @dynamicMemberLookup
 public final class Reference <Value>: ObservableObject {
-    public static func object (_ value: Value) -> Self {
-        .init(value)
-    }
-
     @Published public var referencedValue: Value
 
     public init (_ value: Value) {

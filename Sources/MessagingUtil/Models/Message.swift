@@ -1,14 +1,15 @@
-import Foundation
+public struct Message <Content: Equatable>: Equatable {
+    public let id: String
+    public let status: MessageStatus
+    public let content: Content
+}
 
-struct Message <Content: Equatable>: Equatable {
-    let id: UUID
-    let status: MessageStatus
-    let content: Content
-
-    var info: MessageInfo {
+public extension Message {
+    func setStatus (_ status: MessageStatus) -> Self {
         .init(
             id: id,
-            status: status
+            status: status,
+            content: content
         )
     }
 }

@@ -1,10 +1,32 @@
+import Combine
 import SwiftUI
 
-struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent: Equatable {
+public class MessageSource<MessageContent: Equatable>: ObservableObject {
+    typealias Output = Message<MessageContent>?
+    typealias Failure = Never
+
+    internal let subject = CurrentValueSubject<Message<MessageContent>?, Never>(nil)
+
+    public init () { }
+
+    public func send (_ content: MessageContent) {
+        let newId = String(UUID().uuidString.prefix(8))
+        let message = Message(id: newId, status: .unprocessed, content: content)
+        subject.send(message)
+    }
+}
+
+public extension View {
+    func messageSource <MessageContent: Equatable> (_ subject: MessageSource<MessageContent>) -> some View {
+        environmentObject(subject)
+    }
+}
+
+struct OnMessageViewModifier2 <MessageContent>: ViewModifier where MessageContent: Equatable {
     private let logger: Logger
     @Environment(\.messagingLogLevel) private var minLogLevel: LogLevel
-
-    @EnvironmentObject private var messageReference: Reference<Message<MessageContent>?>
+    
+    @EnvironmentObject private var messageSource: MessageSource<MessageContent>
     @State private var previousId: String?
     private let allowedValues: [MessageContent]?
     private let handler: (Message<MessageContent>) -> (ProcessingAction, MessageContent)
@@ -18,12 +40,12 @@ struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent
         self.allowedValues = allowedValues
         self.handler = handler
 
-        self.logger = .init(name: "onMessage", fileId: fileId, line: line)
+        self.logger = .init(name: "onMessage2", fileId: fileId, line: line)
     }
 
     func body (content: Content) -> some View {
         content
-            .onChange(of: messageReference.referencedValue) { _ in
+            .onReceive(messageSource.subject) { _ in
                 handle()
             }
             .onAppear {
@@ -32,7 +54,7 @@ struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent
     }
 
     private func handle () {
-        guard let message = messageReference.referencedValue
+        guard let message = messageSource.subject.value
         else {
             logger.log(
                 .notice,
@@ -79,10 +101,12 @@ struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent
             minLevel: minLogLevel
         )
 
-        messageReference.referencedValue = .init(
-            id: message.id,
-            status: processingAction.messageStatus,
-            content: messageContent
+        messageSource.subject.send(
+            .init(
+                id: message.id,
+                status: processingAction.messageStatus,
+                content: messageContent
+            )
         )
 
         previousId = message.id
@@ -90,14 +114,14 @@ struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent
 }
 
 public extension View {
-    func onMessage <MessageContent> (
+    func onMessage2 <MessageContent> (
         of _: MessageContent.Type = MessageContent.self,
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (Message<MessageContent>) -> (ProcessingAction, MessageContent)
     ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MessageContent>(
+            OnMessageViewModifier2<MessageContent>(
                 fileId: fileId,
                 line: line,
                 handler: action
@@ -105,14 +129,14 @@ public extension View {
         )
     }
 
-    func onMessage <MessageContent> (
+    func onMessage2 <MessageContent> (
         of allowedValues: MessageContent...,
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (Message<MessageContent>) -> (ProcessingAction, MessageContent)
     ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MessageContent>(
+            OnMessageViewModifier2<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line,
@@ -123,14 +147,14 @@ public extension View {
 
 
 
-    func onMessage <MessageContent> (
+    func onMessage2 <MessageContent> (
         of _: MessageContent.Type = MessageContent.self,
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (Message<MessageContent>) -> ProcessingAction
     ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MessageContent>(
+            OnMessageViewModifier2<MessageContent>(
                 fileId: fileId,
                 line: line
             ) {
@@ -140,14 +164,14 @@ public extension View {
         )
     }
 
-    func onMessage <MessageContent> (
+    func onMessage2 <MessageContent> (
         of allowedValues: MessageContent...,
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (Message<MessageContent>) -> ProcessingAction
     ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MessageContent>(
+            OnMessageViewModifier2<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
@@ -160,7 +184,7 @@ public extension View {
 
 
 
-    func onMessage <MessageContent> (
+    func onMessage2 <MessageContent> (
         of _: MessageContent.Type = MessageContent.self,
         fileId: String = #fileID,
         line: Int = #line,
@@ -168,7 +192,7 @@ public extension View {
         perform action: @escaping (Message<MessageContent>) -> MessageContent
     ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MessageContent>(
+            OnMessageViewModifier2<MessageContent>(
                 fileId: fileId,
                 line: line
             ) {
@@ -178,7 +202,7 @@ public extension View {
         )
     }
 
-    func onMessage <MessageContent> (
+    func onMessage2 <MessageContent> (
         of allowedValues: MessageContent...,
         fileId: String = #fileID,
         line: Int = #line,
@@ -186,7 +210,7 @@ public extension View {
         perform action: @escaping (Message<MessageContent>) -> MessageContent
     ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MessageContent>(
+            OnMessageViewModifier2<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
@@ -199,7 +223,7 @@ public extension View {
 
 
 
-    func onMessage <MessageContent> (
+    func onMessage2 <MessageContent> (
         of _: MessageContent.Type = MessageContent.self,
         isCompleting: Bool = false,
         fileId: String = #fileID,
@@ -207,7 +231,7 @@ public extension View {
         perform action: @escaping (Message<MessageContent>) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MessageContent>(
+            OnMessageViewModifier2<MessageContent>(
                 fileId: fileId,
                 line: line
             ) {
@@ -217,7 +241,7 @@ public extension View {
         )
     }
 
-    func onMessage <MessageContent> (
+    func onMessage2 <MessageContent> (
         of allowedValues: MessageContent...,
         isCompleting: Bool = false,
         fileId: String = #fileID,
@@ -225,7 +249,7 @@ public extension View {
         perform action: @escaping (Message<MessageContent>) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MessageContent>(
+            OnMessageViewModifier2<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
@@ -236,9 +260,9 @@ public extension View {
         )
     }
 
-    
 
-    func onMessage <MessageContent> (
+
+    func onMessage2 <MessageContent> (
         of allowedValues: MessageContent...,
         isCompleting: Bool = false,
         fileId: String = #fileID,
@@ -246,7 +270,7 @@ public extension View {
         perform action: @escaping () -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
-            OnMessageViewModifier<MessageContent>(
+            OnMessageViewModifier2<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
