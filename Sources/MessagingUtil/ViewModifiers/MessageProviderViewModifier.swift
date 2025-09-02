@@ -9,18 +9,23 @@ where MessageContent: Equatable, ContentPublisher: Publisher<MessageContent, Nev
     private let contentPublisher: ContentPublisher
     @StateObject private var message: Reference<Message<MessageContent>?> = .init(nil)
 
+    @StateObject private var messageBuffer: Buffer<Message<MessageContent>>
+
     init (
         contentPublisher: ContentPublisher,
+        bufferSize: Int?,
         fileId: String,
         line: Int
     ) {
         self.contentPublisher = contentPublisher
+        self._messageBuffer = .init(wrappedValue: .init(bufferSize: bufferSize))
         self.logger = .init(name: "messageProvider", fileId: fileId, line: line)
     }
 
     func body (content: Content) -> some View {
         content
             .onReceive(contentPublisher, perform: onNewMessage(content:))
+            .onChange(of: message.referencedValue) { _ in handleNextMessage() }
             .environmentObject(message)
     }
 
@@ -34,19 +39,27 @@ where MessageContent: Equatable, ContentPublisher: Publisher<MessageContent, Nev
             minLevel: minLogLevel
         )
 
-        self.message.referencedValue = message
+        messageBuffer.add(message)
+        handleNextMessage()
+    }
+
+    private func handleNextMessage () {
+        guard message.referencedValue?.status == .completed else { return }
+        self.message.referencedValue = messageBuffer.next()
     }
 }
 
 public extension View {
     func messageProvider <MessageContent, MessageContentPublisher> (
         _ contentPublisher: MessageContentPublisher,
+        bufferSize: Int? = nil,
         fileId: String = #fileID,
         line: Int = #line
     ) -> some View where MessageContent: Equatable, MessageContentPublisher: Publisher<MessageContent, Never> {
         modifier(
             MessageProviderViewModifier<MessageContent, MessageContentPublisher>(
                 contentPublisher: contentPublisher,
+                bufferSize: bufferSize,
                 fileId: fileId,
                 line: line
             )
