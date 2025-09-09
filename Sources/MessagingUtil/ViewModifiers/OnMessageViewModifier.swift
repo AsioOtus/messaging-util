@@ -7,13 +7,13 @@ struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent
     @EnvironmentObject private var messageReference: Reference<Message<MessageContent>?>
     @State private var previousId: String?
     private let allowedValues: [MessageContent]?
-    private let handler: (Message<MessageContent>) -> (ProcessingAction, MessageContent)
+    private let handler: MessageHandler<MessageContent>
 
     init (
         allowedValues: [MessageContent]? = nil,
         fileId: String,
         line: Int,
-        handler: @escaping (Message<MessageContent>) -> (ProcessingAction, MessageContent)
+        handler: @escaping MessageHandler<MessageContent>
     ) {
         self.allowedValues = allowedValues
         self.handler = handler
@@ -32,8 +32,7 @@ struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent
     }
 
     private func handle () {
-        guard let message = messageReference.referencedValue
-        else {
+        guard let message = messageReference.referencedValue else {
             logger.log(
                 .notice,
                 "nil message",
@@ -42,8 +41,16 @@ struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent
             return
         }
 
-        guard message.id != previousId
-        else {
+        if message.status == .processing {
+            logger.log(
+                .notice,
+                "Processing message – \(message.id) – \(String(describing: message.content))",
+                minLevel: minLogLevel
+            )
+            return
+        }
+
+        if message.id == previousId {
             logger.log(
                 .debug,
                 "Duplicated message – \(message.id) – \(String(describing: message.content))",
@@ -52,18 +59,7 @@ struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent
             return
         }
 
-        guard message.status != .processing
-        else {
-            logger.log(
-                .debug,
-                "Processing message – \(message.id) – \(String(describing: message.content))",
-                minLevel: minLogLevel
-            )
-            return
-        }
-
-        guard message.status != .completed
-        else {
+        if message.status == .completed {
             logger.log(
                 .debug,
                 "Completed message – \(message.id) – \(String(describing: message.content))",
@@ -81,20 +77,21 @@ struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent
             return
         }
 
-        let (processingAction, messageContent) = handler(message)
+        handler(message) { processingAction, messageContent in
+            logger.log(
+                .info,
+                "Handled message – \(message.id) – \(String(describing: messageContent)) – \(processingAction)",
+                minLevel: minLogLevel
+            )
 
-        logger.log(
-            .info,
-            "Handled message – \(message.id) – \(String(describing: messageContent)) – \(processingAction)",
-            minLevel: minLogLevel
-        )
+            messageReference.referencedValue = .init(
+                id: message.id,
+                status: processingAction.messageStatus,
+                content: messageContent
+            )
+        }
 
-        messageReference.referencedValue = .init(
-            id: message.id,
-            status: processingAction.messageStatus,
-            content: messageContent
-        )
-
+        messageReference.referencedValue = message.setStatus(.processing)
         previousId = message.id
     }
 }

@@ -6,7 +6,7 @@ public extension View {
         of _: MessageContent.Type = MessageContent.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> (ProcessingAction, MessageContent)
+        perform action: @escaping MessageHandler<MessageContent>
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
@@ -21,7 +21,7 @@ public extension View {
         of allowedValues: MessageContent...,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> (ProcessingAction, MessageContent)
+        perform action: @escaping MessageHandler<MessageContent>
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
@@ -37,14 +37,14 @@ public extension View {
         of _: MessageContent.Type = MessageContent.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessageContent) -> (ProcessingAction, MessageContent)
+        perform action: @escaping (MessageContent, (ProcessingAction, MessageContent) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 fileId: fileId,
                 line: line
             ) {
-                action($0.content)
+                action($0.content, $1)
             }
         )
     }
@@ -53,7 +53,7 @@ public extension View {
         of allowedValues: MessageContent...,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessageContent) -> (ProcessingAction, MessageContent)
+        perform action: @escaping (MessageContent, (ProcessingAction, MessageContent) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
@@ -61,7 +61,7 @@ public extension View {
                 fileId: fileId,
                 line: line
             ) {
-                action($0.content)
+                action($0.content, $1)
             }
         )
     }
@@ -70,14 +70,14 @@ public extension View {
         of _: MessageContent.Type = MessageContent.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () -> (ProcessingAction, MessageContent)
+        perform action: @escaping ((ProcessingAction, MessageContent) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 fileId: fileId,
                 line: line
-            ) { _ in
-                action()
+            ) {
+                action($1)
             }
         )
     }
@@ -86,15 +86,15 @@ public extension View {
         of allowedValues: MessageContent...,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () -> (ProcessingAction, MessageContent)
+        perform action: @escaping ((ProcessingAction, MessageContent) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
-            ) { _ in
-                action()
+            ) {
+                action($1)
             }
         )
     }
@@ -106,15 +106,16 @@ public extension View {
         of _: MessageContent.Type = MessageContent.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> ProcessingAction
+        perform action: @escaping (Message<MessageContent>, (ProcessingAction) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 fileId: fileId,
                 line: line
-            ) {
-                let processingAction = action($0)
-                return (processingAction, $0.content)
+            ) { message, completion in
+                action(message) {
+                    completion($0, message.content)
+                }
             }
         )
     }
@@ -123,16 +124,17 @@ public extension View {
         of allowedValues: MessageContent...,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> ProcessingAction
+        perform action: @escaping (Message<MessageContent>, (ProcessingAction) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
-            ) {
-                let processingAction = action($0)
-                return (processingAction, $0.content)
+            ) { message, completion in
+                action(message) {
+                    completion($0, message.content)
+                }
             }
         )
     }
@@ -141,15 +143,16 @@ public extension View {
         of _: MessageContent.Type,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessageContent) -> ProcessingAction
+        perform action: @escaping (MessageContent, (ProcessingAction) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 fileId: fileId,
                 line: line
-            ) {
-                let processingAction = action($0.content)
-                return (processingAction, $0.content)
+            ) { message, completion in
+                action(message.content) {
+                    completion($0, message.content)
+                }
             }
         )
     }
@@ -158,16 +161,17 @@ public extension View {
         of allowedValues: MessageContent...,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessageContent) -> ProcessingAction
+        perform action: @escaping (MessageContent, (ProcessingAction) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
-            ) {
-                let processingAction = action($0.content)
-                return (processingAction, $0.content)
+            ) { message, completion in
+                action(message.content) {
+                    completion($0, message.content)
+                }
             }
         )
     }
@@ -176,15 +180,16 @@ public extension View {
         of _: MessageContent.Type = MessageContent.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () -> ProcessingAction
+        perform action: @escaping ((ProcessingAction) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 fileId: fileId,
                 line: line
-            ) {
-                let processingAction = action()
-                return (processingAction, $0.content)
+            ) { message, completion in
+                action {
+                    completion($0, message.content)
+                }
             }
         )
     }
@@ -193,16 +198,17 @@ public extension View {
         of allowedValues: MessageContent...,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () -> ProcessingAction
+        perform action: @escaping ((ProcessingAction) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
-            ) {
-                let processingAction = action()
-                return (processingAction, $0.content)
+            ) { message, completion in
+                action {
+                    completion($0, message.content)
+                }
             }
         )
     }
@@ -215,15 +221,19 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> MessageContent
+        perform action: @escaping (Message<MessageContent>, (MessageContent) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 fileId: fileId,
                 line: line
-            ) {
-                let content = action($0)
-                return (isCompleting ? .complete : .continue, content)
+            ) { message, completion in
+                action(message) {
+                    completion(
+                        isCompleting ? .complete : .continue,
+                        $0
+                    )
+                }
             }
         )
     }
@@ -233,16 +243,20 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> MessageContent
+        perform action: @escaping (Message<MessageContent>, (MessageContent) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
-            ) {
-                let content = action($0)
-                return (isCompleting ? .complete : .continue, content)
+            ) { message, completion in
+                action(message) {
+                    completion(
+                        isCompleting ? .complete : .continue,
+                        $0
+                    )
+                }
             }
         )
     }
@@ -252,15 +266,19 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessageContent) -> MessageContent
+        perform action: @escaping (MessageContent, (MessageContent) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 fileId: fileId,
                 line: line
-            ) {
-                let content = action($0.content)
-                return (isCompleting ? .complete : .continue, content)
+            ) { message, completion in
+                action(message.content) {
+                    completion(
+                        isCompleting ? .complete : .continue,
+                        $0
+                    )
+                }
             }
         )
     }
@@ -270,16 +288,20 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessageContent) -> MessageContent
+        perform action: @escaping (MessageContent, (MessageContent) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
-            ) {
-                let content = action($0.content)
-                return (isCompleting ? .complete : .continue, content)
+            ) { message, completion in
+                action(message.content) {
+                    completion(
+                        isCompleting ? .complete : .continue,
+                        $0
+                    )
+                }
             }
         )
     }
@@ -289,15 +311,19 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () -> MessageContent
+        perform action: @escaping ((MessageContent) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 fileId: fileId,
                 line: line
-            ) { _ in
-                let content = action()
-                return (isCompleting ? .complete : .continue, content)
+            ) { message, completion in
+                action {
+                    completion(
+                        isCompleting ? .complete : .continue,
+                        $0
+                    )
+                }
             }
         )
     }
@@ -307,16 +333,20 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () -> MessageContent
+        perform action: @escaping ((MessageContent) -> Void) -> Void
     ) -> some View where MessageContent: Equatable {
         modifier(
             OnMessageViewModifier<MessageContent>(
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
-            ) { _ in
-                let content = action()
-                return (isCompleting ? .complete : .continue, content)
+            ) { message, completion in
+                action {
+                    completion(
+                        isCompleting ? .complete : .continue,
+                        $0
+                    )
+                }
             }
         )
     }
@@ -335,9 +365,9 @@ public extension View {
             OnMessageViewModifier<MessageContent>(
                 fileId: fileId,
                 line: line
-            ) {
-                action($0)
-                return (isCompleting ? .complete : .continue, $0.content)
+            ) { message, completion in
+                action(message)
+                completion(isCompleting ? .complete : .continue, message.content)
             }
         )
     }
@@ -354,9 +384,9 @@ public extension View {
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
-            ) {
-                action($0)
-                return (isCompleting ? .complete : .continue, $0.content)
+            ) { message, completion in
+                action(message)
+                completion(isCompleting ? .complete : .continue, message.content)
             }
         )
     }
@@ -372,9 +402,9 @@ public extension View {
             OnMessageViewModifier<MessageContent>(
                 fileId: fileId,
                 line: line
-            ) {
-                action($0.content)
-                return (isCompleting ? .complete : .continue, $0.content)
+            ) { message, completion in
+                action(message.content)
+                completion(isCompleting ? .complete : .continue, message.content)
             }
         )
     }
@@ -391,9 +421,9 @@ public extension View {
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
-            ) {
-                action($0.content)
-                return (isCompleting ? .complete : .continue, $0.content)
+            ) { message, completion in
+                action(message.content)
+                completion(isCompleting ? .complete : .continue, message.content)
             }
         )
     }
@@ -409,9 +439,9 @@ public extension View {
             OnMessageViewModifier<MessageContent>(
                 fileId: fileId,
                 line: line
-            ) {
+            ) { message, completion in
                 action()
-                return (isCompleting ? .complete : .continue, $0.content)
+                completion(isCompleting ? .complete : .continue, message.content)
             }
         )
     }
@@ -428,9 +458,9 @@ public extension View {
                 allowedValues: allowedValues,
                 fileId: fileId,
                 line: line
-            ) {
+            ) { message, completion in
                 action()
-                return (isCompleting ? .complete : .continue, $0.content)
+                completion(isCompleting ? .complete : .continue, message.content)
             }
         )
     }
