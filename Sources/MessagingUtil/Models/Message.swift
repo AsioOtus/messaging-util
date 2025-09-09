@@ -1,7 +1,7 @@
-public struct Message <Content: Equatable>: Equatable {
+public struct Message <Payload: Equatable>: Equatable {
     public let id: String
     public let status: MessageStatus
-    public let content: Content
+    public let payload: Payload
 }
 
 public extension Message {
@@ -9,7 +9,7 @@ public extension Message {
         .init(
             id: id,
             status: status,
-            content: content
+            payload: payload
         )
     }
 }

@@ -1,41 +1,41 @@
 import Combine
 import SwiftUI
 
-struct MessageProviderViewModifier <MessageContent, ContentPublisher>: ViewModifier
-where MessageContent: Equatable, ContentPublisher: Publisher<MessageContent, Never> {
+struct MessageProviderViewModifier <MessagePayload, PayloadPublisher>: ViewModifier
+where MessagePayload: Equatable, PayloadPublisher: Publisher<MessagePayload, Never> {
     private let logger: Logger
     @Environment(\.messagingLogLevel) private var minLogLevel: LogLevel
 
-    private let contentPublisher: ContentPublisher
-    @StateObject private var message: Reference<Message<MessageContent>?> = .init(nil)
+    private let payloadPublisher: PayloadPublisher
+    @StateObject private var message: Reference<Message<MessagePayload>?> = .init(nil)
 
-    @StateObject private var messageBuffer: Buffer<Message<MessageContent>>
+    @StateObject private var messageBuffer: Buffer<Message<MessagePayload>>
 
     init (
-        contentPublisher: ContentPublisher,
+        payloadPublisher: PayloadPublisher,
         bufferSize: Int?,
         fileId: String,
         line: Int
     ) {
-        self.contentPublisher = contentPublisher
+        self.payloadPublisher = payloadPublisher
         self._messageBuffer = .init(wrappedValue: .init(bufferSize: bufferSize))
         self.logger = .init(name: "messageProvider", fileId: fileId, line: line)
     }
 
     func body (content: Content) -> some View {
         content
-            .onReceive(contentPublisher, perform: onNewMessage(content:))
+            .onReceive(payloadPublisher, perform: onNewMessage(payload:))
             .onChange(of: message.referencedValue) { _ in handleNextMessage() }
             .environmentObject(message)
     }
 
-    private func onNewMessage (content: MessageContent) {
+    private func onNewMessage (payload: MessagePayload) {
         let newId = String(UUID().uuidString.prefix(8))
-        let message = Message(id: newId, status: .dispatching, content: content)
+        let message = Message(id: newId, status: .dispatching, payload: payload)
 
         logger.log(
             .trace,
-            "New message – \(message.id) – \(String(describing: content))",
+            "New message – \(message.id) – \(String(describing: payload))",
             minLevel: minLogLevel
         )
 
@@ -54,15 +54,15 @@ where MessageContent: Equatable, ContentPublisher: Publisher<MessageContent, Nev
 }
 
 public extension View {
-    func messageProvider <MessageContent, MessageContentPublisher> (
-        _ contentPublisher: MessageContentPublisher,
+    func messageProvider <MessagePayload, MessagePayloadPublisher> (
+        _ payloadPublisher: MessagePayloadPublisher,
         bufferSize: Int? = nil,
         fileId: String = #fileID,
         line: Int = #line
-    ) -> some View where MessageContent: Equatable, MessageContentPublisher: Publisher<MessageContent, Never> {
+    ) -> some View where MessagePayload: Equatable, MessagePayloadPublisher: Publisher<MessagePayload, Never> {
         modifier(
-            MessageProviderViewModifier<MessageContent, MessageContentPublisher>(
-                contentPublisher: contentPublisher,
+            MessageProviderViewModifier<MessagePayload, MessagePayloadPublisher>(
+                payloadPublisher: payloadPublisher,
                 bufferSize: bufferSize,
                 fileId: fileId,
                 line: line

@@ -1,1 +1,1 @@
-public typealias MessageHandler <MessageContent: Equatable> = (Message<MessageContent>, (ProcessingAction, MessageContent) -> Void) -> Void
+public typealias MessageHandler <MessagePayload: Equatable> = (Message<MessagePayload>, (ProcessingAction, MessagePayload) -> Void) -> Void
