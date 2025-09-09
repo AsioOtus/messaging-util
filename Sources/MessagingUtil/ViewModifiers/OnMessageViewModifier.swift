@@ -52,6 +52,16 @@ struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent
             return
         }
 
+        guard message.status != .processing
+        else {
+            logger.log(
+                .debug,
+                "Processing message – \(message.id) – \(String(describing: message.content))",
+                minLevel: minLogLevel
+            )
+            return
+        }
+
         guard message.status != .completed
         else {
             logger.log(
@@ -86,174 +96,5 @@ struct OnMessageViewModifier <MessageContent>: ViewModifier where MessageContent
         )
 
         previousId = message.id
-    }
-}
-
-public extension View {
-    func onMessage <MessageContent> (
-        of _: MessageContent.Type = MessageContent.self,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> (ProcessingAction, MessageContent)
-    ) -> some View where MessageContent: Equatable {
-        modifier(
-            OnMessageViewModifier<MessageContent>(
-                fileId: fileId,
-                line: line,
-                handler: action
-            )
-        )
-    }
-
-    func onMessage <MessageContent> (
-        of allowedValues: MessageContent...,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> (ProcessingAction, MessageContent)
-    ) -> some View where MessageContent: Equatable {
-        modifier(
-            OnMessageViewModifier<MessageContent>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line,
-                handler: action
-            )
-        )
-    }
-
-
-
-    func onMessage <MessageContent> (
-        of _: MessageContent.Type = MessageContent.self,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> ProcessingAction
-    ) -> some View where MessageContent: Equatable {
-        modifier(
-            OnMessageViewModifier<MessageContent>(
-                fileId: fileId,
-                line: line
-            ) {
-                let processingAction = action($0)
-                return (processingAction, $0.content)
-            }
-        )
-    }
-
-    func onMessage <MessageContent> (
-        of allowedValues: MessageContent...,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> ProcessingAction
-    ) -> some View where MessageContent: Equatable {
-        modifier(
-            OnMessageViewModifier<MessageContent>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) {
-                let processingAction = action($0)
-                return (processingAction, $0.content)
-            }
-        )
-    }
-
-
-
-    func onMessage <MessageContent> (
-        of _: MessageContent.Type = MessageContent.self,
-        fileId: String = #fileID,
-        line: Int = #line,
-        isCompleting: Bool = false,
-        perform action: @escaping (Message<MessageContent>) -> MessageContent
-    ) -> some View where MessageContent: Equatable {
-        modifier(
-            OnMessageViewModifier<MessageContent>(
-                fileId: fileId,
-                line: line
-            ) {
-                let content = action($0)
-                return (isCompleting ? .complete : .continue, content)
-            }
-        )
-    }
-
-    func onMessage <MessageContent> (
-        of allowedValues: MessageContent...,
-        fileId: String = #fileID,
-        line: Int = #line,
-        isCompleting: Bool = false,
-        perform action: @escaping (Message<MessageContent>) -> MessageContent
-    ) -> some View where MessageContent: Equatable {
-        modifier(
-            OnMessageViewModifier<MessageContent>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) {
-                let content = action($0)
-                return (isCompleting ? .complete : .continue, content)
-            }
-        )
-    }
-
-
-
-    func onMessage <MessageContent> (
-        of _: MessageContent.Type = MessageContent.self,
-        isCompleting: Bool = false,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> Void
-    ) -> some View where MessageContent: Equatable {
-        modifier(
-            OnMessageViewModifier<MessageContent>(
-                fileId: fileId,
-                line: line
-            ) {
-                action($0)
-                return (isCompleting ? .complete : .continue, $0.content)
-            }
-        )
-    }
-
-    func onMessage <MessageContent> (
-        of allowedValues: MessageContent...,
-        isCompleting: Bool = false,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (Message<MessageContent>) -> Void
-    ) -> some View where MessageContent: Equatable {
-        modifier(
-            OnMessageViewModifier<MessageContent>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) {
-                action($0)
-                return (isCompleting ? .complete : .continue, $0.content)
-            }
-        )
-    }
-
-    
-
-    func onMessage <MessageContent> (
-        of allowedValues: MessageContent...,
-        isCompleting: Bool = false,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping () -> Void
-    ) -> some View where MessageContent: Equatable {
-        modifier(
-            OnMessageViewModifier<MessageContent>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) {
-                action()
-                return (isCompleting ? .complete : .continue, $0.content)
-            }
-        )
     }
 }

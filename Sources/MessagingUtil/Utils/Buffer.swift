@@ -14,8 +14,9 @@ nonisolated class Buffer <Element>: ObservableObject {
         dropOverflow()
     }
 
-    func next () -> Element {
-        buffer.removeFirst()
+    func next () -> Element? {
+        guard buffer.count > 0 else { return nil }
+        return buffer.removeFirst()
     }
 
     private func dropOverflow () {

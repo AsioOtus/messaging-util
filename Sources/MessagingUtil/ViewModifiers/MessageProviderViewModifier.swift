@@ -31,7 +31,7 @@ where MessageContent: Equatable, ContentPublisher: Publisher<MessageContent, Nev
 
     private func onNewMessage (content: MessageContent) {
         let newId = String(UUID().uuidString.prefix(8))
-        let message = Message(id: newId, status: .unprocessed, content: content)
+        let message = Message(id: newId, status: .dispatching, content: content)
 
         logger.log(
             .trace,
@@ -44,7 +44,11 @@ where MessageContent: Equatable, ContentPublisher: Publisher<MessageContent, Nev
     }
 
     private func handleNextMessage () {
-        guard message.referencedValue?.status == .completed else { return }
+        guard
+            message.referencedValue == nil ||
+            message.referencedValue?.status == .completed
+        else { return }
+
         self.message.referencedValue = messageBuffer.next()
     }
 }

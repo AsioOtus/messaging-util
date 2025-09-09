@@ -1,10 +1,12 @@
 public enum ProcessingAction {
+    case process
     case `continue`
     case complete
 
     var messageStatus: MessageStatus {
         switch self {
-        case .continue: .incomplete
+        case .process: .processing
+        case .continue: .dispatching
         case .complete: .completed
         }
     }
