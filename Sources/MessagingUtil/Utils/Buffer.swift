@@ -20,10 +20,16 @@ nonisolated class Buffer <Element>: ObservableObject {
     }
 
     private func dropOverflow () {
-        guard let bufferSize, bufferSize > 0 else { return }
-        let overflow = buffer.count - bufferSize
+        guard let bufferSize else { return }
 
-        guard overflow > 0 else { return }
-        buffer.removeFirst(overflow)
+        if bufferSize > 0 {
+            let overflow = buffer.count - bufferSize
+
+            if overflow > 0 {
+                buffer.removeFirst(overflow)
+            }
+        } else {
+            buffer = []
+        }
     }
 }

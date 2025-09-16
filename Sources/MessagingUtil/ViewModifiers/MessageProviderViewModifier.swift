@@ -2,9 +2,14 @@ import Combine
 import SwiftUI
 
 struct MessageProviderViewModifier <MessagePayload, PayloadPublisher>: ViewModifier
-where MessagePayload: Equatable, PayloadPublisher: Publisher<MessagePayload, Never> {
+where
+MessagePayload: Sendable,
+PayloadPublisher: Publisher<MessagePayload, Never>
+{
     private let logger: Logger
     @Environment(\.messagingLogLevel) private var minLogLevel: LogLevel
+
+    private let completionHandler: (Message<MessagePayload>, Error?) -> Void
 
     private let payloadPublisher: PayloadPublisher
     @StateObject private var message: Reference<Message<MessagePayload>?> = .init(nil)
@@ -15,8 +20,10 @@ where MessagePayload: Equatable, PayloadPublisher: Publisher<MessagePayload, Nev
         payloadPublisher: PayloadPublisher,
         bufferSize: Int?,
         fileId: String,
-        line: Int
+        line: Int,
+        completionHandler: @escaping (Message<MessagePayload>, Error?) -> Void
     ) {
+        self.completionHandler = completionHandler
         self.payloadPublisher = payloadPublisher
         self._messageBuffer = .init(wrappedValue: .init(bufferSize: bufferSize))
         self.logger = .init(name: "messageProvider", fileId: fileId, line: line)
@@ -46,8 +53,15 @@ where MessagePayload: Equatable, PayloadPublisher: Publisher<MessagePayload, Nev
     private func handleNextMessage () {
         guard
             message.referencedValue == nil ||
-            message.referencedValue?.status == .completed
+            message.referencedValue?.status.isCompleted == true
         else { return }
+
+        if
+            let message = message.referencedValue,
+            case .completed(let error) = message.status
+        {
+            completionHandler(message, error)
+        }
 
         self.message.referencedValue = messageBuffer.next()
     }
@@ -58,14 +72,20 @@ public extension View {
         _ payloadPublisher: MessagePayloadPublisher,
         bufferSize: Int? = nil,
         fileId: String = #fileID,
-        line: Int = #line
-    ) -> some View where MessagePayload: Equatable, MessagePayloadPublisher: Publisher<MessagePayload, Never> {
+        line: Int = #line,
+        onCompletion: @escaping (Message<MessagePayload>, Error?) -> Void = { _, _ in }
+    ) -> some View
+    where
+    MessagePayload: Sendable,
+    MessagePayloadPublisher: Publisher<MessagePayload, Never>
+    {
         modifier(
             MessageProviderViewModifier<MessagePayload, MessagePayloadPublisher>(
                 payloadPublisher: payloadPublisher,
                 bufferSize: bufferSize,
                 fileId: fileId,
-                line: line
+                line: line,
+                completionHandler: onCompletion
             )
         )
     }

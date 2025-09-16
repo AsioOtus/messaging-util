@@ -1,21 +1,18 @@
 import SwiftUI
 
-struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload: Equatable {
+struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload: Sendable {
     private let logger: Logger
     @Environment(\.messagingLogLevel) private var minLogLevel: LogLevel
 
     @EnvironmentObject private var messageReference: Reference<Message<MessagePayload>?>
     @State private var previousId: String?
-    private let allowedValues: [MessagePayload]?
     private let handler: MessageHandler<MessagePayload>
 
     init (
-        allowedValues: [MessagePayload]? = nil,
         fileId: String,
         line: Int,
         handler: @escaping MessageHandler<MessagePayload>
     ) {
-        self.allowedValues = allowedValues
         self.handler = handler
 
         self.logger = .init(name: "onMessage", fileId: fileId, line: line)
@@ -41,25 +38,27 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
             return
         }
 
-        if message.status == .processing {
-            logger.log(
-                .notice,
-                "Processing message – \(message.id) – \(String(describing: message.payload))",
-                minLevel: minLogLevel
-            )
-            return
-        }
-
         if message.id == previousId {
             logger.log(
-                .debug,
+                .notice,
                 "Duplicated message – \(message.id) – \(String(describing: message.payload))",
                 minLevel: minLogLevel
             )
             return
         }
 
-        if message.status == .completed {
+        previousId = message.id
+
+        if message.status.isProcessing {
+            logger.log(
+                .debug,
+                "Processing message – \(message.id) – \(String(describing: message.payload))",
+                minLevel: minLogLevel
+            )
+            return
+        }
+
+        if message.status.isCompleted {
             logger.log(
                 .debug,
                 "Completed message – \(message.id) – \(String(describing: message.payload))",
@@ -68,16 +67,11 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
             return
         }
 
-        if let allowedValues, !allowedValues.contains(message.payload) {
-            logger.log(
-                .trace,
-                "Filtered message – \(message.id) – \(String(describing: message.payload))",
-                minLevel: minLogLevel
-            )
-            return
-        }
+        messageReference.referencedValue = message.setStatus(.processing)
 
-        handler(message) { processingAction, messagePayload in
+        Task {
+            let (processingAction, messagePayload) = await handler(message)
+
             logger.log(
                 .info,
                 "Handled message – \(message.id) – \(String(describing: messagePayload)) – \(processingAction)",
@@ -90,8 +84,5 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
                 payload: messagePayload
             )
         }
-
-        messageReference.referencedValue = message.setStatus(.processing)
-        previousId = message.id
     }
 }

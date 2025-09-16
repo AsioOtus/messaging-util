@@ -1,1 +1,1 @@
-public typealias MessageHandler <MessagePayload: Equatable> = (Message<MessagePayload>, (ProcessingAction, MessagePayload) -> Void) -> Void
+public typealias MessageHandler <MessagePayload> = (Message<MessagePayload>) async -> (ProcessingAction, MessagePayload)

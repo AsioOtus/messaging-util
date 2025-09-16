@@ -6,26 +6,10 @@ public extension View {
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping MessageHandler<MessagePayload>
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping (Message<MessagePayload>) async -> (ProcessingAction, MessagePayload)
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
-                fileId: fileId,
-                line: line,
-                handler: action
-            )
-        )
-    }
-
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping MessageHandler<MessagePayload>
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
                 fileId: fileId,
                 line: line,
                 handler: action
@@ -37,31 +21,14 @@ public extension View {
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload, (ProcessingAction, MessagePayload) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping (MessagePayload) async -> (ProcessingAction, MessagePayload)
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) {
-                action($0.payload, $1)
-            }
-        )
-    }
-
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (MessagePayload, (ProcessingAction, MessagePayload) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) {
-                action($0.payload, $1)
+                await action($0.payload)
             }
         )
     }
@@ -70,31 +37,14 @@ public extension View {
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping ((ProcessingAction, MessagePayload) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping () async -> (ProcessingAction, MessagePayload)
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
-            ) {
-                action($1)
-            }
-        )
-    }
-
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping ((ProcessingAction, MessagePayload) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) {
-                action($1)
+            ) { _ in
+                await action()
             }
         )
     }
@@ -106,35 +56,16 @@ public extension View {
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>, (ProcessingAction) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping (Message<MessagePayload>) async -> ProcessingAction
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
-            ) { message, completion in
-                action(message) {
-                    completion($0, message.payload)
-                }
-            }
-        )
-    }
+            ) {
+                let processingAction = await action($0)
+                return (processingAction, $0.payload)
 
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>, (ProcessingAction) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) { message, completion in
-                action(message) {
-                    completion($0, message.payload)
-                }
             }
         )
     }
@@ -143,35 +74,16 @@ public extension View {
         of _: MessagePayload.Type,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload, (ProcessingAction) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping (MessagePayload) async -> ProcessingAction
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
-            ) { message, completion in
-                action(message.payload) {
-                    completion($0, message.payload)
-                }
-            }
-        )
-    }
+            ) {
+                let processingAction = await action($0.payload)
+                return (processingAction, $0.payload)
 
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (MessagePayload, (ProcessingAction) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) { message, completion in
-                action(message.payload) {
-                    completion($0, message.payload)
-                }
             }
         )
     }
@@ -180,35 +92,16 @@ public extension View {
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping ((ProcessingAction) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping () async -> ProcessingAction
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
-            ) { message, completion in
-                action {
-                    completion($0, message.payload)
-                }
-            }
-        )
-    }
+            ) {
+                let processingAction = await action()
+                return (processingAction, $0.payload)
 
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping ((ProcessingAction) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) { message, completion in
-                action {
-                    completion($0, message.payload)
-                }
             }
         )
     }
@@ -221,42 +114,15 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>, (MessagePayload) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping (Message<MessagePayload>) async -> MessagePayload
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
-            ) { message, completion in
-                action(message) {
-                    completion(
-                        isCompleting ? .complete : .continue,
-                        $0
-                    )
-                }
-            }
-        )
-    }
-
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        isCompleting: Bool = false,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>, (MessagePayload) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) { message, completion in
-                action(message) {
-                    completion(
-                        isCompleting ? .complete : .continue,
-                        $0
-                    )
-                }
+            ) {
+                let content = await action($0)
+                return (isCompleting ? .complete : .continue, content)
             }
         )
     }
@@ -266,42 +132,15 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload, (MessagePayload) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping (MessagePayload) async -> MessagePayload
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
-            ) { message, completion in
-                action(message.payload) {
-                    completion(
-                        isCompleting ? .complete : .continue,
-                        $0
-                    )
-                }
-            }
-        )
-    }
-
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        isCompleting: Bool = false,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (MessagePayload, (MessagePayload) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) { message, completion in
-                action(message.payload) {
-                    completion(
-                        isCompleting ? .complete : .continue,
-                        $0
-                    )
-                }
+            ) {
+                let content = await action($0.payload)
+                return (isCompleting ? .complete : .continue, content)
             }
         )
     }
@@ -311,42 +150,15 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping ((MessagePayload) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping () async -> MessagePayload
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
-            ) { message, completion in
-                action {
-                    completion(
-                        isCompleting ? .complete : .continue,
-                        $0
-                    )
-                }
-            }
-        )
-    }
-
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        isCompleting: Bool = false,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping ((MessagePayload) -> Void) -> Void
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) { message, completion in
-                action {
-                    completion(
-                        isCompleting ? .complete : .continue,
-                        $0
-                    )
-                }
+            ) { _ in
+                let content = await action()
+                return (isCompleting ? .complete : .continue, content)
             }
         )
     }
@@ -359,34 +171,15 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>) -> Void
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping (Message<MessagePayload>) async -> Void
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
-            ) { message, completion in
-                action(message)
-                completion(isCompleting ? .complete : .continue, message.payload)
-            }
-        )
-    }
-
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        isCompleting: Bool = false,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>) -> Void
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) { message, completion in
-                action(message)
-                completion(isCompleting ? .complete : .continue, message.payload)
+            ) {
+                await action($0)
+                return (isCompleting ? .complete : .continue, $0.payload)
             }
         )
     }
@@ -396,34 +189,15 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload) -> Void
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping (MessagePayload) async -> Void
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
-            ) { message, completion in
-                action(message.payload)
-                completion(isCompleting ? .complete : .continue, message.payload)
-            }
-        )
-    }
-
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        isCompleting: Bool = false,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping (MessagePayload) -> Void
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) { message, completion in
-                action(message.payload)
-                completion(isCompleting ? .complete : .continue, message.payload)
+            ) {
+                await action($0.payload)
+                return (isCompleting ? .complete : .continue, $0.payload)
             }
         )
     }
@@ -433,34 +207,15 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () -> Void
-    ) -> some View where MessagePayload: Equatable {
+        perform action: @escaping () async -> Void
+    ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
-            ) { message, completion in
-                action()
-                completion(isCompleting ? .complete : .continue, message.payload)
-            }
-        )
-    }
-
-    func onMessage <MessagePayload> (
-        of allowedValues: MessagePayload...,
-        isCompleting: Bool = false,
-        fileId: String = #fileID,
-        line: Int = #line,
-        perform action: @escaping () -> Void
-    ) -> some View where MessagePayload: Equatable {
-        modifier(
-            OnMessageViewModifier<MessagePayload>(
-                allowedValues: allowedValues,
-                fileId: fileId,
-                line: line
-            ) { message, completion in
-                action()
-                completion(isCompleting ? .complete : .continue, message.payload)
+            ) {
+                await action()
+                return (isCompleting ? .complete : .continue, $0.payload)
             }
         )
     }
