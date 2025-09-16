@@ -5,7 +5,7 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
     @Environment(\.messagingLogLevel) private var minLogLevel: LogLevel
 
     @EnvironmentObject private var messageReference: Reference<Message<MessagePayload>?>
-    @State private var previousId: String?
+    @State private var lastReceivedMessageId: String?
     private let handler: MessageHandler<MessagePayload>
 
     init (
@@ -14,7 +14,6 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
         handler: @escaping MessageHandler<MessagePayload>
     ) {
         self.handler = handler
-
         self.logger = .init(name: "onMessage", fileId: fileId, line: line)
     }
 
@@ -33,26 +32,29 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
             logger.log(
                 .notice,
                 "nil message",
+                Message<MessagePayload>?.none,
                 minLevel: minLogLevel
             )
             return
         }
 
-        if message.id == previousId {
+        if message.id == lastReceivedMessageId {
             logger.log(
                 .notice,
-                "Duplicated message – \(message.id) – \(String(describing: message.payload))",
+                "Duplicated message",
+                message,
                 minLevel: minLogLevel
             )
             return
         }
 
-        previousId = message.id
+        lastReceivedMessageId = message.id
 
         if message.status.isProcessing {
             logger.log(
                 .debug,
-                "Processing message – \(message.id) – \(String(describing: message.payload))",
+                "Processing message",
+                message,
                 minLevel: minLogLevel
             )
             return
@@ -61,7 +63,8 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
         if message.status.isCompleted {
             logger.log(
                 .debug,
-                "Completed message – \(message.id) – \(String(describing: message.payload))",
+                "Completed message",
+                message,
                 minLevel: minLogLevel
             )
             return
@@ -72,9 +75,15 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
         Task {
             let (processingAction, messagePayload) = await handler(message)
 
+            let logMessage = Message(
+                id: message.id,
+                status: message.status,
+                payload: messagePayload
+            )
             logger.log(
                 .info,
-                "Handled message – \(message.id) – \(String(describing: messagePayload)) – \(processingAction)",
+                "Handled message – \(processingAction)",
+                logMessage,
                 minLevel: minLogLevel
             )
 

@@ -1,7 +1,7 @@
 import Combine
 import SwiftUI
 
-struct MessageProviderViewModifier <MessagePayload, PayloadPublisher>: ViewModifier
+struct MessageBroadcastViewModifier <MessagePayload, PayloadPublisher>: ViewModifier
 where
 MessagePayload: Sendable,
 PayloadPublisher: Publisher<MessagePayload, Never>
@@ -10,10 +10,9 @@ PayloadPublisher: Publisher<MessagePayload, Never>
     @Environment(\.messagingLogLevel) private var minLogLevel: LogLevel
 
     private let completionHandler: (Message<MessagePayload>, Error?) -> Void
-
     private let payloadPublisher: PayloadPublisher
+    
     @StateObject private var message: Reference<Message<MessagePayload>?> = .init(nil)
-
     @StateObject private var messageBuffer: Buffer<Message<MessagePayload>>
 
     init (
@@ -42,7 +41,8 @@ PayloadPublisher: Publisher<MessagePayload, Never>
 
         logger.log(
             .trace,
-            "New message – \(message.id) – \(String(describing: payload))",
+            "New message",
+            message,
             minLevel: minLogLevel
         )
 
@@ -63,12 +63,12 @@ PayloadPublisher: Publisher<MessagePayload, Never>
             completionHandler(message, error)
         }
 
-        self.message.referencedValue = messageBuffer.next()
+        message.referencedValue = messageBuffer.next()
     }
 }
 
 public extension View {
-    func messageProvider <MessagePayload, MessagePayloadPublisher> (
+    func messageBroadcast <MessagePayload, MessagePayloadPublisher> (
         _ payloadPublisher: MessagePayloadPublisher,
         bufferSize: Int? = nil,
         fileId: String = #fileID,
@@ -80,7 +80,7 @@ public extension View {
     MessagePayloadPublisher: Publisher<MessagePayload, Never>
     {
         modifier(
-            MessageProviderViewModifier<MessagePayload, MessagePayloadPublisher>(
+            MessageBroadcastViewModifier<MessagePayload, MessagePayloadPublisher>(
                 payloadPublisher: payloadPublisher,
                 bufferSize: bufferSize,
                 fileId: fileId,
