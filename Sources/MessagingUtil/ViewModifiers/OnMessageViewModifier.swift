@@ -19,8 +19,8 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
 
     func body (content: Content) -> some View {
         content
-            .onChange(of: messageReference.referencedValue) { _ in
-                handle()
+            .onChange(of: messageReference.referencedValue) {
+                handle($0)
             }
             .onAppear {
                 handle()
@@ -28,7 +28,11 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
     }
 
     private func handle () {
-        guard let message = messageReference.referencedValue else {
+        handle(messageReference.referencedValue)
+    }
+
+    private func handle (_ message: Message<MessagePayload>?) {
+        guard let message = message else {
             logger.log(
                 .notice,
                 "nil message",
@@ -47,8 +51,6 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
             )
             return
         }
-
-        lastReceivedMessageId = message.id
 
         if message.status.isProcessing {
             logger.log(
@@ -70,28 +72,43 @@ struct OnMessageViewModifier <MessagePayload>: ViewModifier where MessagePayload
             return
         }
 
-        messageReference.referencedValue = message.setStatus(.processing)
+        lastReceivedMessageId = message.id
+
+        let processingMessage = message.setStatus(.processing)
+        messageReference.referencedValue = processingMessage
+
+        logger.log(
+            .info,
+            "Message handling started",
+            processingMessage,
+            minLevel: minLogLevel
+        )
 
         Task {
-            let (processingAction, messagePayload) = await handler(message)
+            let (processingAction, messagePayload) = await handle(message)
 
-            let logMessage = Message(
-                id: message.id,
-                status: message.status,
-                payload: messagePayload
-            )
-            logger.log(
-                .info,
-                "Handled message – \(processingAction)",
-                logMessage,
-                minLevel: minLogLevel
-            )
-
-            messageReference.referencedValue = .init(
+            let handledMessage = Message<MessagePayload>(
                 id: message.id,
                 status: processingAction.messageStatus,
                 payload: messagePayload
             )
+
+            messageReference.referencedValue = handledMessage
+
+            logger.log(
+                .info,
+                "Handled message",
+                handledMessage,
+                minLevel: minLogLevel
+            )
+        }
+    }
+
+    private func handle (_ message: Message<MessagePayload>) async -> (ProcessingAction, MessagePayload) {
+        do {
+            return try await handler(message)
+        } catch {
+            return (.fail(error), message.payload)
         }
     }
 }

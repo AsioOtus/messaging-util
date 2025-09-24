@@ -9,29 +9,26 @@ PayloadPublisher: Publisher<MessagePayload, Never>
     private let logger: Logger
     @Environment(\.messagingLogLevel) private var minLogLevel: LogLevel
 
-    private let completionHandler: (Message<MessagePayload>, Error?) -> Void
+    private let eventCompletionHandler: (Message<MessagePayload>, Error?) -> Void
     private let payloadPublisher: PayloadPublisher
     
     @StateObject private var message: Reference<Message<MessagePayload>?> = .init(nil)
-    @StateObject private var messageBuffer: Buffer<Message<MessagePayload>>
 
     init (
         payloadPublisher: PayloadPublisher,
-        bufferSize: Int?,
         fileId: String,
         line: Int,
-        completionHandler: @escaping (Message<MessagePayload>, Error?) -> Void
+        eventCompletionHandler: @escaping (Message<MessagePayload>, Error?) -> Void
     ) {
-        self.completionHandler = completionHandler
+        self.eventCompletionHandler = eventCompletionHandler
         self.payloadPublisher = payloadPublisher
-        self._messageBuffer = .init(wrappedValue: .init(bufferSize: bufferSize))
         self.logger = .init(name: "messageProvider", fileId: fileId, line: line)
     }
 
     func body (content: Content) -> some View {
         content
             .onReceive(payloadPublisher, perform: onNewMessage(payload:))
-            .onChange(of: message.referencedValue) { _ in handleNextMessage() }
+            .onChange(of: message.referencedValue, perform: onMessageChanged)
             .environmentObject(message)
     }
 
@@ -39,6 +36,10 @@ PayloadPublisher: Publisher<MessagePayload, Never>
         let newId = String(UUID().uuidString.prefix(8))
         let message = Message(id: newId, status: .dispatching, payload: payload)
 
+        handleNewMessage(message)
+    }
+
+    private func handleNewMessage (_ message: Message<MessagePayload>) {
         logger.log(
             .trace,
             "New message",
@@ -46,34 +47,40 @@ PayloadPublisher: Publisher<MessagePayload, Never>
             minLevel: minLogLevel
         )
 
-        messageBuffer.add(message)
-        handleNextMessage()
-    }
+        if !message.status.isCompleted {
+            logger.log(
+                .trace,
+                "Current message interrupted",
+                self.message.referencedValue,
+                minLevel: minLogLevel
+            )
 
-    private func handleNextMessage () {
-        guard
-            message.referencedValue == nil ||
-            message.referencedValue?.status.isCompleted == true
-        else { return }
-
-        if
-            let message = message.referencedValue,
-            case .completed(let error) = message.status
-        {
-            completionHandler(message, error)
+            self.message.referencedValue = self.message.referencedValue?.setStatus(.completed(InterruptedError()))
         }
 
-        message.referencedValue = messageBuffer.next()
+        self.message.referencedValue = message
+    }
+
+    private func onMessageChanged (_ message: Message<MessagePayload>?) {
+        if let message, message.status.isCompleted {
+            logger.log(
+                .trace,
+                "Message completed",
+                message,
+                minLevel: minLogLevel
+            )
+
+            eventCompletionHandler(message, message.status.error)
+        }
     }
 }
 
 public extension View {
     func messageBroadcast <MessagePayload, MessagePayloadPublisher> (
         _ payloadPublisher: MessagePayloadPublisher,
-        bufferSize: Int? = nil,
         fileId: String = #fileID,
         line: Int = #line,
-        onCompletion: @escaping (Message<MessagePayload>, Error?) -> Void = { _, _ in }
+        onEventCompletion: @escaping (Message<MessagePayload>, Error?) -> Void = { _, _ in }
     ) -> some View
     where
     MessagePayload: Sendable,
@@ -82,10 +89,9 @@ public extension View {
         modifier(
             MessageBroadcastViewModifier<MessagePayload, MessagePayloadPublisher>(
                 payloadPublisher: payloadPublisher,
-                bufferSize: bufferSize,
                 fileId: fileId,
                 line: line,
-                completionHandler: onCompletion
+                eventCompletionHandler: onEventCompletion
             )
         )
     }

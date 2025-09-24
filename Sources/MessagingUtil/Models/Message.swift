@@ -4,13 +4,13 @@ public struct Message <Payload>: Equatable, Sendable where Payload: Sendable {
     public let payload: Payload
 
     public static func == (_ lhs: Self, _ rhs: Self) -> Bool {
-        lhs.id == rhs.id
+        lhs.id == rhs.id && lhs.status == rhs.status
     }
 }
 
 extension Message: CustomStringConvertible {
     public var description: String {
-        "\(id) \(String(describing: payload)) \(status)"
+        "\(id) – \(String(describing: payload)) – \(status)"
     }
 }
 

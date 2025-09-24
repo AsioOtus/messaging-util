@@ -47,7 +47,7 @@ struct Logger {
         let location = "\(name) (\(fileId):\(line))"
         let message = message?.description ?? "nil"
 
-        let result = "messaging-util [\(level)] | \(location) | \(text) – \(message)"
+        let result = "messaging-util [\(level)] | \(location) | \(text) | \(message)"
         return result
     }
 }

@@ -12,4 +12,12 @@ public enum ProcessingAction: Sendable {
         case .fail(let error): .completed(error)
         }
     }
+
+    public init (catching action: () async throws -> ProcessingAction) async {
+        do {
+            self = try await action()
+        } catch {
+            self = .fail(error)
+        }
+    }
 }

@@ -3,10 +3,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "messaging-util",
+    name: "swiftui-messaging-util",
     platforms: [.iOS(.v14), .macOS(.v11)],
     products: [
         .library(
+            name: "SwiftUIMessagingUtil",
             name: "MessagingUtil",
             targets: ["MessagingUtil"]),
     ],

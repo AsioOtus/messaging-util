@@ -6,7 +6,7 @@ public extension View {
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>) async -> (ProcessingAction, MessagePayload)
+        perform action: @escaping (Message<MessagePayload>) async throws -> (ProcessingAction, MessagePayload)
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
@@ -21,14 +21,14 @@ public extension View {
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload) async -> (ProcessingAction, MessagePayload)
+        perform action: @escaping (MessagePayload) async throws -> (ProcessingAction, MessagePayload)
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) {
-                await action($0.payload)
+                try await action($0.payload)
             }
         )
     }
@@ -37,14 +37,14 @@ public extension View {
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () async -> (ProcessingAction, MessagePayload)
+        perform action: @escaping () async throws -> (ProcessingAction, MessagePayload)
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) { _ in
-                await action()
+                try  await action()
             }
         )
     }
@@ -56,14 +56,14 @@ public extension View {
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>) async -> ProcessingAction
+        perform action: @escaping (Message<MessagePayload>) async throws -> ProcessingAction
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) {
-                let processingAction = await action($0)
+                let processingAction = try await action($0)
                 return (processingAction, $0.payload)
 
             }
@@ -74,14 +74,14 @@ public extension View {
         of _: MessagePayload.Type,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload) async -> ProcessingAction
+        perform action: @escaping (MessagePayload) async throws -> ProcessingAction
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) {
-                let processingAction = await action($0.payload)
+                let processingAction = try await action($0.payload)
                 return (processingAction, $0.payload)
 
             }
@@ -92,14 +92,14 @@ public extension View {
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () async -> ProcessingAction
+        perform action: @escaping () async throws -> ProcessingAction
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) {
-                let processingAction = await action()
+                let processingAction = try await action()
                 return (processingAction, $0.payload)
 
             }
@@ -114,14 +114,14 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>) async -> MessagePayload
+        perform action: @escaping (Message<MessagePayload>) async throws -> MessagePayload
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) {
-                let content = await action($0)
+                let content = try await action($0)
                 return (isCompleting ? .complete : .continue, content)
             }
         )
@@ -132,14 +132,14 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload) async -> MessagePayload
+        perform action: @escaping (MessagePayload) async throws -> MessagePayload
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) {
-                let content = await action($0.payload)
+                let content = try await action($0.payload)
                 return (isCompleting ? .complete : .continue, content)
             }
         )
@@ -150,14 +150,14 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () async -> MessagePayload
+        perform action: @escaping () async throws -> MessagePayload
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) { _ in
-                let content = await action()
+                let content = try await action()
                 return (isCompleting ? .complete : .continue, content)
             }
         )
@@ -171,14 +171,14 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>) async -> Void
+        perform action: @escaping (Message<MessagePayload>) async throws -> Void
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) {
-                await action($0)
+                try await action($0)
                 return (isCompleting ? .complete : .continue, $0.payload)
             }
         )
@@ -189,14 +189,14 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload) async -> Void
+        perform action: @escaping (MessagePayload) async throws -> Void
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) {
-                await action($0.payload)
+                try await action($0.payload)
                 return (isCompleting ? .complete : .continue, $0.payload)
             }
         )
@@ -207,14 +207,14 @@ public extension View {
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () async -> Void
+        perform action: @escaping () async throws -> Void
     ) -> some View where MessagePayload: Sendable {
         modifier(
             OnMessageViewModifier<MessagePayload>(
                 fileId: fileId,
                 line: line
             ) {
-                await action()
+                try await action()
                 return (isCompleting ? .complete : .continue, $0.payload)
             }
         )
