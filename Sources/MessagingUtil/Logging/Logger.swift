@@ -26,6 +26,7 @@ struct Logger {
         guard level.rawValue >= minLevel.rawValue else { return }
 
         switch level {
+        case .all:      break
         case .notice:   logger.notice("\(preparedMessage(level, text, message))")
         case .debug:    logger.debug("\(preparedMessage(level, text, message))")
         case .trace:    logger.trace("\(preparedMessage(level, text, message))")

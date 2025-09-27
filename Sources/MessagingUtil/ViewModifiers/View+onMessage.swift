@@ -2,7 +2,7 @@ import SwiftUI
 
 // MARK: - Return (ProcessingAction, MessagePayload)
 public extension View {
-    func onMessage <MessagePayload> (
+    func onMessageWithMeta <MessagePayload> (
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
@@ -52,7 +52,7 @@ public extension View {
 
 // MARK: - Return ProcessingAction
 public extension View {
-    func onMessage <MessagePayload> (
+    func onMessageWithMeta <MessagePayload> (
         of _: MessagePayload.Type = MessagePayload.self,
         fileId: String = #fileID,
         line: Int = #line,
@@ -109,7 +109,7 @@ public extension View {
 
 // MARK: - Return MessagePayload
 public extension View {
-    func onMessage <MessagePayload> (
+    func onMessageWithMeta <MessagePayload> (
         of _: MessagePayload.Type = MessagePayload.self,
         isCompleting: Bool = false,
         fileId: String = #fileID,
@@ -166,7 +166,7 @@ public extension View {
 
 // MARK: - Return Void
 public extension View {
-    func onMessage <MessagePayload> (
+    func onMessageWithMeta <MessagePayload> (
         of _: MessagePayload.Type = MessagePayload.self,
         isCompleting: Bool = false,
         fileId: String = #fileID,

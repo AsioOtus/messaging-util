@@ -47,7 +47,7 @@ PayloadPublisher: Publisher<MessagePayload, Never>
             minLevel: minLogLevel
         )
 
-        if !message.status.isCompleted {
+        if self.message != nil && self.message.referencedValue?.status.isCompleted == false {
             logger.log(
                 .trace,
                 "Current message interrupted",

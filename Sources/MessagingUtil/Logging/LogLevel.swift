@@ -1,4 +1,5 @@
 public enum LogLevel: Int {
+    case all
     case notice
     case debug
     case trace
