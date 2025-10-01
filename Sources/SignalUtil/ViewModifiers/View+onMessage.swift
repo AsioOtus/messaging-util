@@ -1,15 +1,15 @@
 import SwiftUI
 
-// MARK: - Return (ProcessingAction, MessagePayload)
+// MARK: - Return (ProcessingAction, SignalPayload)
 public extension View {
-    func onMessageWithMeta <MessagePayload> (
-        of _: MessagePayload.Type = MessagePayload.self,
+    func onSignalWithMeta <SignalPayload> (
+        of _: SignalPayload.Type = SignalPayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>) async throws -> (ProcessingAction, MessagePayload)
-    ) -> some View where MessagePayload: Sendable {
+        perform action: @escaping (Signal<SignalPayload>) async throws -> (ProcessingAction, SignalPayload)
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line,
                 handler: action
@@ -17,14 +17,14 @@ public extension View {
         )
     }
 
-    func onMessage <MessagePayload> (
-        of _: MessagePayload.Type = MessagePayload.self,
+    func onSignal <SignalPayload> (
+        of _: SignalPayload.Type = SignalPayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload) async throws -> (ProcessingAction, MessagePayload)
-    ) -> some View where MessagePayload: Sendable {
+        perform action: @escaping (SignalPayload) async throws -> (ProcessingAction, SignalPayload)
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line
             ) {
@@ -33,14 +33,14 @@ public extension View {
         )
     }
 
-    func onMessage <MessagePayload> (
-        of _: MessagePayload.Type = MessagePayload.self,
+    func onSignal <SignalPayload> (
+        of _: SignalPayload.Type = SignalPayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () async throws -> (ProcessingAction, MessagePayload)
-    ) -> some View where MessagePayload: Sendable {
+        perform action: @escaping () async throws -> (ProcessingAction, SignalPayload)
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line
             ) { _ in
@@ -52,14 +52,14 @@ public extension View {
 
 // MARK: - Return ProcessingAction
 public extension View {
-    func onMessageWithMeta <MessagePayload> (
-        of _: MessagePayload.Type = MessagePayload.self,
+    func onSignalWithMeta <SignalPayload> (
+        of _: SignalPayload.Type = SignalPayload.self,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>) async throws -> ProcessingAction
-    ) -> some View where MessagePayload: Sendable {
+        perform action: @escaping (Signal<SignalPayload>) async throws -> ProcessingAction
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line
             ) {
@@ -70,14 +70,14 @@ public extension View {
         )
     }
 
-    func onMessage <MessagePayload> (
-        of _: MessagePayload.Type,
+    func onSignal <SignalPayload> (
+        of _: SignalPayload.Type,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload) async throws -> ProcessingAction
-    ) -> some View where MessagePayload: Sendable {
+        perform action: @escaping (SignalPayload) async throws -> ProcessingAction
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line
             ) {
@@ -88,14 +88,14 @@ public extension View {
         )
     }
 
-    func onMessage <MessagePayload> (
-        of _: MessagePayload.Type = MessagePayload.self,
+    func onSignal <SignalPayload> (
+        of _: SignalPayload.Type = SignalPayload.self,
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping () async throws -> ProcessingAction
-    ) -> some View where MessagePayload: Sendable {
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line
             ) {
@@ -107,17 +107,17 @@ public extension View {
     }
 }
 
-// MARK: - Return MessagePayload
+// MARK: - Return SignalPayload
 public extension View {
-    func onMessageWithMeta <MessagePayload> (
-        of _: MessagePayload.Type = MessagePayload.self,
+    func onSignalWithMeta <SignalPayload> (
+        of _: SignalPayload.Type = SignalPayload.self,
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>) async throws -> MessagePayload
-    ) -> some View where MessagePayload: Sendable {
+        perform action: @escaping (Signal<SignalPayload>) async throws -> SignalPayload
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line
             ) {
@@ -127,15 +127,15 @@ public extension View {
         )
     }
 
-    func onMessage <MessagePayload> (
-        of _: MessagePayload.Type = MessagePayload.self,
+    func onSignal <SignalPayload> (
+        of _: SignalPayload.Type = SignalPayload.self,
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload) async throws -> MessagePayload
-    ) -> some View where MessagePayload: Sendable {
+        perform action: @escaping (SignalPayload) async throws -> SignalPayload
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line
             ) {
@@ -145,15 +145,15 @@ public extension View {
         )
     }
 
-    func onMessage <MessagePayload> (
-        of _: MessagePayload.Type = MessagePayload.self,
+    func onSignal <SignalPayload> (
+        of _: SignalPayload.Type = SignalPayload.self,
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping () async throws -> MessagePayload
-    ) -> some View where MessagePayload: Sendable {
+        perform action: @escaping () async throws -> SignalPayload
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line
             ) { _ in
@@ -166,15 +166,15 @@ public extension View {
 
 // MARK: - Return Void
 public extension View {
-    func onMessageWithMeta <MessagePayload> (
-        of _: MessagePayload.Type = MessagePayload.self,
+    func onSignalWithMeta <SignalPayload> (
+        of _: SignalPayload.Type = SignalPayload.self,
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (Message<MessagePayload>) async throws -> Void
-    ) -> some View where MessagePayload: Sendable {
+        perform action: @escaping (Signal<SignalPayload>) async throws -> Void
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line
             ) {
@@ -184,15 +184,15 @@ public extension View {
         )
     }
 
-    func onMessage <MessagePayload> (
-        of _: MessagePayload.Type = MessagePayload.self,
+    func onSignal <SignalPayload> (
+        of _: SignalPayload.Type = SignalPayload.self,
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
-        perform action: @escaping (MessagePayload) async throws -> Void
-    ) -> some View where MessagePayload: Sendable {
+        perform action: @escaping (SignalPayload) async throws -> Void
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line
             ) {
@@ -202,15 +202,15 @@ public extension View {
         )
     }
 
-    func onMessage <MessagePayload> (
-        of _: MessagePayload.Type = MessagePayload.self,
+    func onSignal <SignalPayload> (
+        of _: SignalPayload.Type = SignalPayload.self,
         isCompleting: Bool = false,
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping () async throws -> Void
-    ) -> some View where MessagePayload: Sendable {
+    ) -> some View where SignalPayload: Sendable {
         modifier(
-            OnMessageViewModifier<MessagePayload>(
+            OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
                 line: line
             ) {

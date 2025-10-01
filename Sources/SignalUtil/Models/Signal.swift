@@ -1,6 +1,6 @@
-public struct Message <Payload>: Equatable, Sendable where Payload: Sendable {
+public struct Signal <Payload>: Equatable, Sendable where Payload: Sendable {
     public let id: String
-    public let status: MessageStatus
+    public let status: SignalStatus
     public let payload: Payload
 
     public static func == (_ lhs: Self, _ rhs: Self) -> Bool {
@@ -8,14 +8,14 @@ public struct Message <Payload>: Equatable, Sendable where Payload: Sendable {
     }
 }
 
-extension Message: CustomStringConvertible {
+extension Signal: CustomStringConvertible {
     public var description: String {
         "\(id) – \(String(describing: payload)) – \(status)"
     }
 }
 
-public extension Message {
-    func setStatus (_ status: MessageStatus) -> Self {
+public extension Signal {
+    func setStatus (_ status: SignalStatus) -> Self {
         .init(
             id: id,
             status: status,

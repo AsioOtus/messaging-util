@@ -4,7 +4,7 @@ public enum ProcessingAction: Sendable {
     case complete
     case fail(Error)
 
-    var messageStatus: MessageStatus {
+    var signalStatus: SignalStatus {
         switch self {
         case .process: .processing
         case .continue: .dispatching

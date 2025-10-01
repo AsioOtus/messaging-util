@@ -3,19 +3,19 @@
 import PackageDescription
 
 let package = Package(
-    name: "swiftui-messaging-util",
+    name: "swiftui-signal-util",
     platforms: [
         .iOS(.v15),
         .macOS(.v11)
     ],
     products: [
         .library(
-            name: "MessagingUtil",
-            targets: ["MessagingUtil"]),
+            name: "SignalUtil",
+            targets: ["SignalUtil"]),
     ],
     targets: [
         .target(
-            name: "MessagingUtil"
+            name: "SignalUtil"
         )
     ]
 )

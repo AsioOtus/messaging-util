@@ -1,4 +1,4 @@
-public enum MessageStatus: Sendable {
+public enum SignalStatus: Sendable {
     case dispatching
     case processing
     case completed(Error?)
@@ -24,8 +24,8 @@ public enum MessageStatus: Sendable {
     }
 }
 
-extension MessageStatus: Equatable {
-    public static func == (lhs: MessageStatus, rhs: MessageStatus) -> Bool {
+extension SignalStatus: Equatable {
+    public static func == (lhs: SignalStatus, rhs: SignalStatus) -> Bool {
         switch (lhs, rhs) {
         case (.dispatching, .dispatching): true
         case (.processing, .processing): true
