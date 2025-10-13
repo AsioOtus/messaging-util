@@ -19,28 +19,31 @@ struct Logger {
 
     func log <SignalPayload> (
         _ level: LogLevel,
+        _ source: String?,
         _ text: String,
         _ signal: Signal<SignalPayload>?,
         minLevel: LogLevel
     ) {
         guard level.rawValue >= minLevel.rawValue else { return }
+        let preparedMessage = prepareMessage(level, source, text, signal)
 
         switch level {
         case .all:      break
-        case .notice:   logger.notice("\(preparedSignal(level, text, signal))")
-        case .debug:    logger.debug("\(preparedSignal(level, text, signal))")
-        case .trace:    logger.trace("\(preparedSignal(level, text, signal))")
-        case .info:     logger.info("\(preparedSignal(level, text, signal))")
-        case .error:    logger.error("\(preparedSignal(level, text, signal))")
-        case .warning:  logger.warning("\(preparedSignal(level, text, signal))")
-        case .fault:    logger.fault("\(preparedSignal(level, text, signal))")
-        case .critical: logger.critical("\(preparedSignal(level, text, signal))")
+        case .notice:   logger.notice("\(preparedMessage)")
+        case .debug:    logger.debug("\(preparedMessage)")
+        case .trace:    logger.trace("\(preparedMessage)")
+        case .info:     logger.info("\(preparedMessage)")
+        case .error:    logger.error("\(preparedMessage)")
+        case .warning:  logger.warning("\(preparedMessage)")
+        case .fault:    logger.fault("\(preparedMessage)")
+        case .critical: logger.critical("\(preparedMessage)")
         case .none:     break
         }
     }
 
-    func preparedSignal <SignalPayload> (
+    private func prepareMessage <SignalPayload> (
         _ level: LogLevel,
+        _ source: String?,
         _ text: String,
         _ signal: Signal<SignalPayload>?,
     ) -> String {
@@ -48,7 +51,10 @@ struct Logger {
         let location = "\(name) (\(fileId):\(line))"
         let signal = signal?.description ?? "nil"
 
-        let result = "messaging-util [\(level)] | \(location) | \(text) | \(signal)"
+        let result = ["messaging-util [\(level)]", location, source, text, signal]
+            .compactMap { $0 }
+            .joined(separator: " | ")
+
         return result
     }
 }

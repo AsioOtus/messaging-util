@@ -7,7 +7,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (Signal<SignalPayload>) async throws -> (ProcessingAction, SignalPayload)
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
@@ -22,7 +22,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (SignalPayload) async throws -> (ProcessingAction, SignalPayload)
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
@@ -38,7 +38,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping () async throws -> (ProcessingAction, SignalPayload)
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
@@ -57,7 +57,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (Signal<SignalPayload>) async throws -> ProcessingAction
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
@@ -75,7 +75,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (SignalPayload) async throws -> ProcessingAction
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
@@ -93,7 +93,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping () async throws -> ProcessingAction
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
@@ -115,7 +115,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (Signal<SignalPayload>) async throws -> SignalPayload
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
@@ -133,7 +133,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (SignalPayload) async throws -> SignalPayload
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
@@ -151,7 +151,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping () async throws -> SignalPayload
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
@@ -172,7 +172,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (Signal<SignalPayload>) async throws -> Void
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
@@ -190,7 +190,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping (SignalPayload) async throws -> Void
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,
@@ -208,7 +208,7 @@ public extension View {
         fileId: String = #fileID,
         line: Int = #line,
         perform action: @escaping () async throws -> Void
-    ) -> some View where SignalPayload: Sendable {
+    ) -> some View where SignalPayload: Sendable, SignalPayload: Equatable {
         modifier(
             OnSignalViewModifier<SignalPayload>(
                 fileId: fileId,

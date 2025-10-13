@@ -4,6 +4,7 @@ import SwiftUI
 struct SignalBroadcastViewModifier <SignalPayload, PayloadPublisher>: ViewModifier
 where
 SignalPayload: Sendable,
+SignalPayload: Equatable,
 PayloadPublisher: Publisher<SignalPayload, Never>
 {
     private let logger: Logger
@@ -42,6 +43,7 @@ PayloadPublisher: Publisher<SignalPayload, Never>
     private func handleNewSignal (_ signal: Signal<SignalPayload>) {
         logger.log(
             .trace,
+            nil,
             "New signal",
             signal,
             minLevel: minLogLevel
@@ -50,6 +52,7 @@ PayloadPublisher: Publisher<SignalPayload, Never>
         if self.signal.referencedValue != nil && self.signal.referencedValue?.status.isCompleted == false {
             logger.log(
                 .trace,
+                nil,
                 "Current signal interrupted",
                 self.signal.referencedValue,
                 minLevel: minLogLevel
@@ -65,6 +68,7 @@ PayloadPublisher: Publisher<SignalPayload, Never>
         if let signal, signal.status.isCompleted {
             logger.log(
                 .trace,
+                nil,
                 "Signal completed",
                 signal,
                 minLevel: minLogLevel

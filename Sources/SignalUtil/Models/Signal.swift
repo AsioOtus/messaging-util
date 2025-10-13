@@ -1,11 +1,7 @@
-public struct Signal <Payload>: Equatable, Sendable where Payload: Sendable {
+public struct Signal <Payload>: Equatable, Sendable where Payload: Sendable, Payload: Equatable {
     public let id: String
     public let status: SignalStatus
     public let payload: Payload
-
-    public static func == (_ lhs: Self, _ rhs: Self) -> Bool {
-        lhs.id == rhs.id && lhs.status == rhs.status
-    }
 }
 
 extension Signal: CustomStringConvertible {

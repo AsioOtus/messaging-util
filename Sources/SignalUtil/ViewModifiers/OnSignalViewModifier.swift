@@ -1,11 +1,11 @@
 import SwiftUI
 
-struct OnSignalViewModifier <SignalPayload>: ViewModifier where SignalPayload: Sendable {
+struct OnSignalViewModifier <SignalPayload>: ViewModifier where SignalPayload: Sendable, SignalPayload: Equatable {
     private let logger: Logger
     @Environment(\.signalLogLevel) private var minLogLevel: LogLevel
 
     @EnvironmentObject private var signalReference: Reference<Signal<SignalPayload>?>
-    @State private var lastReceivedSignalId: String?
+    @State private var lastReceivedSignal: Signal<SignalPayload>?
     private let handler: SignalHandler<SignalPayload>
 
     init (
@@ -20,21 +20,22 @@ struct OnSignalViewModifier <SignalPayload>: ViewModifier where SignalPayload: S
     func body (content: Content) -> some View {
         content
             .onChange(of: signalReference.referencedValue) {
-                handle($0)
+                handle($0, "onChange")
             }
             .onAppear {
-                handle()
+                handle("onAppear")
             }
     }
 
-    private func handle () {
-        handle(signalReference.referencedValue)
+    private func handle (_ source: String) {
+        handle(signalReference.referencedValue, source)
     }
 
-    private func handle (_ signal: Signal<SignalPayload>?) {
+    private func handle (_ signal: Signal<SignalPayload>?, _ source: String) {
         guard let signal = signal else {
             logger.log(
                 .notice,
+                source,
                 "nil signal",
                 Signal<SignalPayload>?.none,
                 minLevel: minLogLevel
@@ -42,9 +43,10 @@ struct OnSignalViewModifier <SignalPayload>: ViewModifier where SignalPayload: S
             return
         }
 
-        if signal.id == lastReceivedSignalId {
+        if signal.id == lastReceivedSignal?.id {
             logger.log(
                 .notice,
+                source,
                 "Duplicated signal",
                 signal,
                 minLevel: minLogLevel
@@ -55,6 +57,7 @@ struct OnSignalViewModifier <SignalPayload>: ViewModifier where SignalPayload: S
         if signal.status.isProcessing {
             logger.log(
                 .debug,
+                source,
                 "Processing signal",
                 signal,
                 minLevel: minLogLevel
@@ -65,6 +68,7 @@ struct OnSignalViewModifier <SignalPayload>: ViewModifier where SignalPayload: S
         if signal.status.isCompleted {
             logger.log(
                 .debug,
+                source,
                 "Completed signal",
                 signal,
                 minLevel: minLogLevel
@@ -72,20 +76,35 @@ struct OnSignalViewModifier <SignalPayload>: ViewModifier where SignalPayload: S
             return
         }
 
-        lastReceivedSignalId = signal.id
+        lastReceivedSignal = signal
+
+        logger.log(
+            .debug,
+            source,
+            "Signal handling started - environment state",
+            signalReference.referencedValue,
+            minLevel: minLogLevel
+        )
 
         let processingSignal = signal.setStatus(.processing)
         signalReference.referencedValue = processingSignal
 
         logger.log(
             .info,
+            source,
             "Signal handling started",
             processingSignal,
             minLevel: minLogLevel
         )
 
         Task {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+
             let (processingAction, signalPayload) = await handle(signal)
+
+            if lastReceivedSignal?.id == signal.id, lastReceivedSignal?.payload != signalPayload {
+                lastReceivedSignal = nil
+            }
 
             let handledSignal = Signal<SignalPayload>(
                 id: signal.id,
@@ -93,10 +112,19 @@ struct OnSignalViewModifier <SignalPayload>: ViewModifier where SignalPayload: S
                 payload: signalPayload
             )
 
+            logger.log(
+                .debug,
+                source,
+                "Handled signal - environment state",
+                signalReference.referencedValue,
+                minLevel: minLogLevel
+            )
+
             signalReference.referencedValue = handledSignal
 
             logger.log(
                 .info,
+                source,
                 "Handled signal",
                 handledSignal,
                 minLevel: minLogLevel
